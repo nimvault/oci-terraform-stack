@@ -65,12 +65,6 @@ variable "service_user_email" {
   default     = "nimvault-service@nimvault.cloud"
 }
 
-variable "identity_domain_name" {
-  description = "Name of the OCI Identity Domain (usually 'Default')"
-  type        = string
-  default     = "Default"
-}
-
 variable "create_vault_secret" {
   description = "Store PEM key in OCI Vault (requires existing Vault)"
   type        = bool
@@ -103,8 +97,6 @@ locals {
   # Root compartment uses "tenancy" syntax, non-root uses "compartment id <ocid>"
   is_root_compartment = var.compartment_ocid == var.tenancy_ocid
   policy_scope = local.is_root_compartment ? "tenancy" : "compartment id ${var.compartment_ocid}"
-  # Identity Domains requires 'DomainName'/'GroupName' syntax in policies
-  group_ref = "'${var.identity_domain_name}'/'${oci_identity_group.nimvault.name}'"
 }
 
 # ─── RSA Key Pair ─────────────────────────────────────────────
@@ -171,10 +163,10 @@ resource "oci_identity_policy" "nimvault_storage" {
   description    = "Allow Nimvault service user to manage Object Storage in target compartment"
 
   statements = [
-    "Allow group ${local.group_ref} to manage objects in ${local.policy_scope}",
-    "Allow group ${local.group_ref} to read buckets in ${local.policy_scope}",
-    "Allow group ${local.group_ref} to manage preauthenticated-requests in ${local.policy_scope}",
-    "Allow group ${local.group_ref} to read objectstorage-namespaces in tenancy",
+    "Allow group id ${oci_identity_group.nimvault.id} to manage objects in ${local.policy_scope}",
+    "Allow group id ${oci_identity_group.nimvault.id} to read buckets in ${local.policy_scope}",
+    "Allow group id ${oci_identity_group.nimvault.id} to manage preauthenticated-requests in ${local.policy_scope}",
+    "Allow group id ${oci_identity_group.nimvault.id} to read objectstorage-namespaces in tenancy",
   ]
 
   freeform_tags = {
