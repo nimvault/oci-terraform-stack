@@ -160,14 +160,14 @@ resource "oci_identity_user_group_membership" "nimvault" {
 # This requires only compartment-level admin, not tenancy admin.
 
 resource "oci_identity_policy" "nimvault_storage" {
-  compartment_id = var.compartment_ocid
+  compartment_id = var.tenancy_ocid
   name           = "nimvault-object-storage-policy"
   description    = "Nimvault Object Storage access"
 
   statements = [
-    "Allow group NimvaultServiceUsers to manage objects in compartment id ${var.compartment_ocid}",
-    "Allow group NimvaultServiceUsers to read buckets in compartment id ${var.compartment_ocid}",
-    "Allow group NimvaultServiceUsers to manage preauthenticated-requests in compartment id ${var.compartment_ocid}",
+    "Allow group id ${oci_identity_group.nimvault.id} to manage objects in compartment id ${var.compartment_ocid}",
+    "Allow group id ${oci_identity_group.nimvault.id} to read buckets in compartment id ${var.compartment_ocid}",
+    "Allow group id ${oci_identity_group.nimvault.id} to manage preauthenticated-requests in compartment id ${var.compartment_ocid}",
   ]
 
   depends_on = [oci_identity_user_group_membership.nimvault]
