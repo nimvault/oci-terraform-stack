@@ -23,10 +23,6 @@ terraform {
       source  = "hashicorp/tls"
       version = ">= 4.0"
     }
-    time = {
-      source  = "hashicorp/time"
-      version = ">= 0.9"
-    }
   }
 }
 
@@ -159,28 +155,23 @@ resource "oci_identity_user_group_membership" "nimvault" {
   user_id  = oci_identity_user.nimvault.id
 }
 
-# Wait for IAM to propagate group membership before creating policy.
-# OCI IAM has a propagation delay — policy creation fails if the group
-# hasn't fully propagated to the policy engine yet.
-resource "time_sleep" "wait_for_iam" {
-  depends_on      = [oci_identity_user_group_membership.nimvault]
-  create_duration = "15s"
-}
-
-# ─── IAM Policies (Minimum Privilege) ────────────────────────
+# ─── IAM Policy (Minimum Privilege) ──────────────────────────
+# Policy is created in the TARGET compartment (not tenancy root).
+# This requires only compartment-level admin, not tenancy admin.
 
 resource "oci_identity_policy" "nimvault_storage" {
-  depends_on     = [time_sleep.wait_for_iam]
-  compartment_id = var.tenancy_ocid
+  compartment_id = var.compartment_ocid
   name           = "nimvault-object-storage-policy"
-  description    = "Allow Nimvault service user to manage Object Storage in target compartment"
+  description    = "Nimvault Object Storage access"
 
   statements = [
-    "Allow group id ${oci_identity_group.nimvault.id} to manage objects in ${local.policy_scope}",
-    "Allow group id ${oci_identity_group.nimvault.id} to read buckets in ${local.policy_scope}",
-    "Allow group id ${oci_identity_group.nimvault.id} to manage preauthenticated-requests in ${local.policy_scope}",
-    "Allow group id ${oci_identity_group.nimvault.id} to read objectstorage-namespaces in tenancy",
+    "Allow group NimvaultServiceUsers to manage objects in compartment id ${var.compartment_ocid}",
+    "Allow group NimvaultServiceUsers to read buckets in compartment id ${var.compartment_ocid}",
+    "Allow group NimvaultServiceUsers to manage preauthenticated-requests in compartment id ${var.compartment_ocid}",
+    "Allow group NimvaultServiceUsers to read objectstorage-namespaces in tenancy",
   ]
+
+  depends_on = [oci_identity_user_group_membership.nimvault]
 
   freeform_tags = {
     "managed-by" = "nimvault-terraform-stack"
@@ -215,20 +206,14 @@ resource "oci_vault_secret" "nimvault_pem" {
 
 output "nimvault_setup_instructions" {
   value = <<-EOT
-  ✅ Setup complete! Your Nimvault service account is ready.
+  Setup complete! Service account + policy created automatically.
 
-  OPTION A (easiest): Click the "nimvault_callback_url" link below.
-     It will take you back to WordPress with everything pre-filled.
-
-  OPTION B: Copy all output values as JSON:
-     1. Click the ⋮ menu on this Outputs page
-     2. Select "Copy as JSON"
-     3. In WordPress → Nimvault Settings → Terraform tab
-     4. Drop the JSON file or paste the JSON text
-
-  OPTION C: Copy values manually into Nimvault Settings fields.
+  Return to WordPress:
+     OPTION A (easiest): Click the "nimvault_callback_url" link below.
+     OPTION B: Copy Outputs as JSON > paste in Nimvault Settings.
+     OPTION C: Copy values manually into Nimvault Settings fields.
   EOT
-  description = "📋 How to finish setup — read this first"
+  description = "How to finish setup"
 }
 
 output "nimvault_callback_url" {

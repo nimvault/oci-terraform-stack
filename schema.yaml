@@ -102,7 +102,7 @@ variables:
         - true
 
 outputGroups:
-  - title: "Setup complete — click the link to finish"
+  - title: "Setup complete — return to WordPress"
     outputs:
       - nimvault_setup_instructions
       - nimvault_callback_url
