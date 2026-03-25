@@ -1,0 +1,109 @@
+title: "Nimvault — Connect to OCI Object Storage"
+description: |
+  This stack creates a dedicated service account so Nimvault can manage
+  your Object Storage. Just select your Compartment and click Apply.
+
+  After Apply, click the callback link in Outputs to return to WordPress
+  with everything configured automatically.
+schemaVersion: 1.1.0
+version: "2.0.0"
+locale: "en"
+
+variableGroups:
+  - title: "Step 1 — Where is your bucket?"
+    variables:
+      - region
+      - compartment_ocid
+
+  - title: "Step 2 — Your WordPress site (for auto-return)"
+    variables:
+      - nimvault_site_url
+
+  - title: "Advanced (optional)"
+    variables:
+      - service_user_name
+
+  - title: "Vault Integration (optional)"
+    variables:
+      - create_vault_secret
+      - vault_id
+      - vault_key_id
+
+  - title: "Hidden"
+    visible: false
+    variables:
+      - tenancy_ocid
+
+variables:
+  tenancy_ocid:
+    type: string
+    title: "Tenancy OCID"
+    required: true
+
+  region:
+    type: oci:identity:region:name
+    title: "Region"
+    description: "Select the region where your Object Storage bucket lives"
+    required: true
+
+  compartment_ocid:
+    type: oci:identity:compartment:id
+    title: "Compartment"
+    description: "Select the compartment that contains your bucket. Nimvault will only access this compartment."
+    required: true
+
+  nimvault_site_url:
+    type: string
+    title: "WordPress site URL"
+    description: "Your site URL (e.g. https://myblog.com). This creates a link that takes you back to WordPress with everything pre-filled. Leave empty to copy manually."
+    default: ""
+    required: false
+
+  service_user_name:
+    type: string
+    title: "Service user name"
+    description: "Name for the Nimvault service account (no console login, API only)"
+    default: "nimvault-service"
+    required: true
+
+  create_vault_secret:
+    type: boolean
+    title: "Store private key in OCI Vault"
+    description: "If enabled, the private key is stored in your Vault instead of shown in output"
+    default: false
+
+  vault_id:
+    type: oci:kms:vault:id
+    title: "Vault"
+    dependsOn:
+      compartmentId: compartment_ocid
+    visible:
+      eq:
+        - create_vault_secret
+        - true
+
+  vault_key_id:
+    type: oci:kms:key:id
+    title: "Master encryption key"
+    dependsOn:
+      compartmentId: compartment_ocid
+      vaultId: vault_id
+    visible:
+      eq:
+        - create_vault_secret
+        - true
+
+outputGroups:
+  - title: "Setup complete — click the link to finish"
+    outputs:
+      - nimvault_setup_instructions
+      - nimvault_callback_url
+
+  - title: "Connection details (for manual setup or JSON import)"
+    outputs:
+      - nimvault_tenancy_ocid
+      - nimvault_user_ocid
+      - nimvault_fingerprint
+      - nimvault_region
+      - nimvault_private_key_pem
+      - nimvault_compartment_name
