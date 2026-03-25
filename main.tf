@@ -23,6 +23,10 @@ terraform {
       source  = "hashicorp/tls"
       version = ">= 4.0"
     }
+    time = {
+      source  = "hashicorp/time"
+      version = ">= 0.9"
+    }
   }
 }
 
@@ -155,9 +159,18 @@ resource "oci_identity_user_group_membership" "nimvault" {
   user_id  = oci_identity_user.nimvault.id
 }
 
+# Wait for IAM to propagate group membership before creating policy.
+# OCI IAM has a propagation delay — policy creation fails if the group
+# hasn't fully propagated to the policy engine yet.
+resource "time_sleep" "wait_for_iam" {
+  depends_on      = [oci_identity_user_group_membership.nimvault]
+  create_duration = "15s"
+}
+
 # ─── IAM Policies (Minimum Privilege) ────────────────────────
 
 resource "oci_identity_policy" "nimvault_storage" {
+  depends_on     = [time_sleep.wait_for_iam]
   compartment_id = var.tenancy_ocid
   name           = "nimvault-object-storage-policy"
   description    = "Allow Nimvault service user to manage Object Storage in target compartment"
