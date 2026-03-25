@@ -22,6 +22,7 @@ variableGroups:
   - title: "Advanced (optional)"
     variables:
       - service_user_name
+      - service_user_email
 
   - title: "Vault Integration (optional)"
     variables:
@@ -64,6 +65,13 @@ variables:
     title: "Service user name"
     description: "Name for the Nimvault service account (no console login, API only)"
     default: "nimvault-service"
+    required: true
+
+  service_user_email:
+    type: string
+    title: "Service user email"
+    description: "Email address for the service account (required by OCI Identity Domains). Can be any email."
+    default: "nimvault-service@nimvault.local"
     required: true
 
   create_vault_secret:

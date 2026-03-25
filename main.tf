@@ -59,6 +59,12 @@ variable "service_user_name" {
   default     = "nimvault-service"
 }
 
+variable "service_user_email" {
+  description = "Email for the service user (required by OCI Identity Domains)"
+  type        = string
+  default     = "nimvault-service@nimvault.local"
+}
+
 variable "create_vault_secret" {
   description = "Store PEM key in OCI Vault (requires existing Vault)"
   type        = bool
@@ -106,6 +112,7 @@ resource "oci_identity_user" "nimvault" {
   compartment_id = var.tenancy_ocid
   name           = var.service_user_name
   description    = "Nimvault service account - Object Storage access only"
+  email          = var.service_user_email
 
   freeform_tags = {
     "managed-by" = "nimvault-terraform-stack"
