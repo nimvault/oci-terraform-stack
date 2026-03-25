@@ -62,7 +62,7 @@ variable "service_user_name" {
 variable "service_user_email" {
   description = "Email for the service user (required by OCI Identity Domains)"
   type        = string
-  default     = "nimvault-service@nimvault.local"
+  default     = "nimvault-service@nimvault.cloud"
 }
 
 variable "create_vault_secret" {

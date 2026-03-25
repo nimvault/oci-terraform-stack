@@ -71,7 +71,7 @@ variables:
     type: string
     title: "Service user email"
     description: "Email address for the service account (required by OCI Identity Domains). Can be any email."
-    default: "nimvault-service@nimvault.local"
+    default: "nimvault-service@nimvault.cloud"
     required: true
 
   create_vault_secret:
