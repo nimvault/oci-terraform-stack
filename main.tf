@@ -168,7 +168,6 @@ resource "oci_identity_policy" "nimvault_storage" {
     "Allow group NimvaultServiceUsers to manage objects in compartment id ${var.compartment_ocid}",
     "Allow group NimvaultServiceUsers to read buckets in compartment id ${var.compartment_ocid}",
     "Allow group NimvaultServiceUsers to manage preauthenticated-requests in compartment id ${var.compartment_ocid}",
-    "Allow group NimvaultServiceUsers to read objectstorage-namespaces in tenancy",
   ]
 
   depends_on = [oci_identity_user_group_membership.nimvault]
