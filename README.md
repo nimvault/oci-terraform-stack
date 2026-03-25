@@ -51,6 +51,7 @@ management platform for WordPress.
 | `nimvault_site_url` | No | (empty) | Your WordPress URL — enables auto-return link |
 | `service_user_name` | No | `nimvault-service` | IAM user name |
 | `service_user_email` | No | `nimvault-service@nimvault.cloud` | Required by Identity Domains |
+| `identity_domain_name` | No | `Default` | OCI Identity Domain name (rarely needs changing) |
 | `create_vault_secret` | No | `false` | Store PEM key in OCI Vault |
 
 ## Requirements

@@ -23,6 +23,7 @@ variableGroups:
     variables:
       - service_user_name
       - service_user_email
+      - identity_domain_name
 
   - title: "Vault Integration (optional)"
     variables:
@@ -72,6 +73,13 @@ variables:
     title: "Service user email"
     description: "Email address for the service account (required by OCI Identity Domains). Can be any email."
     default: "nimvault-service@nimvault.cloud"
+    required: true
+
+  identity_domain_name:
+    type: string
+    title: "Identity Domain name"
+    description: "Name of your OCI Identity Domain. Almost always 'Default'. Only change if you use a custom domain."
+    default: "Default"
     required: true
 
   create_vault_secret:
