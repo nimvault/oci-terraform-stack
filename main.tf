@@ -117,8 +117,6 @@ resource "oci_identity_user_capabilities_management" "nimvault" {
   can_use_console_password     = false
   can_use_customer_secret_keys = false
   can_use_smtp_credentials     = false
-  can_use_db_credentials       = false
-  can_use_o_auth2_client_credentials = false
 }
 
 # ─── API Key Registration ────────────────────────────────────
