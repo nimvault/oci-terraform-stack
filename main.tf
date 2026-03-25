@@ -40,7 +40,6 @@ variable "tenancy_ocid" {
 variable "region" {
   description = "The region where your Object Storage bucket lives"
   type        = string
-  default     = "ap-seoul-1"
 }
 
 variable "compartment_ocid" {
@@ -86,6 +85,12 @@ data "oci_identity_tenancy" "tenancy" {
 
 data "oci_identity_compartment" "target" {
   id = var.compartment_ocid
+}
+
+locals {
+  # Root compartment uses "tenancy" syntax, non-root uses "compartment id <ocid>"
+  is_root_compartment = var.compartment_ocid == var.tenancy_ocid
+  policy_scope = local.is_root_compartment ? "tenancy" : "compartment id ${var.compartment_ocid}"
 }
 
 # ─── RSA Key Pair ─────────────────────────────────────────────
@@ -151,9 +156,9 @@ resource "oci_identity_policy" "nimvault_storage" {
   description    = "Allow Nimvault service user to manage Object Storage in target compartment"
 
   statements = [
-    "Allow group NimvaultServiceUsers to manage objects in compartment ${data.oci_identity_compartment.target.name}",
-    "Allow group NimvaultServiceUsers to read buckets in compartment ${data.oci_identity_compartment.target.name}",
-    "Allow group NimvaultServiceUsers to manage preauthenticated-requests in compartment ${data.oci_identity_compartment.target.name}",
+    "Allow group NimvaultServiceUsers to manage objects in ${local.policy_scope}",
+    "Allow group NimvaultServiceUsers to read buckets in ${local.policy_scope}",
+    "Allow group NimvaultServiceUsers to manage preauthenticated-requests in ${local.policy_scope}",
     "Allow group NimvaultServiceUsers to read objectstorage-namespaces in tenancy",
   ]
 
@@ -243,7 +248,7 @@ output "nimvault_compartment" {
 }
 
 output "nimvault_compartment_name" {
-  value       = data.oci_identity_compartment.target.name
+  value       = local.is_root_compartment ? "tenancy (root)" : coalesce(data.oci_identity_compartment.target.name, var.compartment_ocid)
   description = "Compartment name"
 }
 
