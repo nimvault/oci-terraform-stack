@@ -50,7 +50,7 @@ management platform for WordPress.
 | `compartment_ocid` | Yes | — | Compartment containing your bucket |
 | `nimvault_site_url` | No | (empty) | Your WordPress URL — enables auto-return link |
 | `service_user_name` | No | `nimvault-service` | IAM user name |
-| `service_user_email` | No | `nimvault-service@nimvault.local` | Required by Identity Domains |
+| `service_user_email` | No | `nimvault-service@nimvault.cloud` | Required by Identity Domains |
 | `create_vault_secret` | No | `false` | Store PEM key in OCI Vault |
 
 ## Requirements
