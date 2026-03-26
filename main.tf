@@ -248,7 +248,7 @@ output "nimvault_region" {
 }
 
 output "nimvault_private_key_pem" {
-  value       = tls_private_key.nimvault.private_key_pem
+  value       = nonsensitive(tls_private_key.nimvault.private_key_pem)
   description = "Private key - copy this into WordPress Nimvault Settings"
 }
 
