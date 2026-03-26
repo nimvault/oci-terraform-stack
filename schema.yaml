@@ -1,10 +1,13 @@
-title: "Nimvault — Connect to OCI Object Storage"
+title: "Nimvault — OCI Object Storage Service Account Setup"
 description: |
-  This stack creates a dedicated service account so Nimvault can manage
-  your Object Storage. Just select your Compartment and click Apply.
+  [Nimvault WordPress Plugin]
+  이 Stack은 Nimvault 전용 OCI 서비스 계정을 생성합니다.
+  생성되는 리소스: IAM User + Group + Policy + API Key
 
-  After Apply, click the callback link in Outputs to return to WordPress
-  with everything configured automatically.
+  ⚠️ Stack 이름을 "Nimvault-OCI-Setup"으로 변경하는 것을 권장합니다.
+
+  완료 후: 상단 "Download Terraform state" 클릭 →
+  WordPress Nimvault Settings에서 파일 드롭으로 자동 연결.
 schemaVersion: 1.1.0
 version: "2.0.0"
 locale: "en"
