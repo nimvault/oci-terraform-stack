@@ -173,8 +173,8 @@ resource "oci_identity_policy" "nimvault_storage" {
   description    = "Nimvault Object Storage access"
 
   statements = [
-    "Allow group id ${oci_identity_group.nimvault.id} to manage buckets in compartment id ${var.compartment_ocid} where any {request.permission='BUCKET_READ', request.permission='BUCKET_INSPECT', request.permission='PAR_MANAGE'}",
-    "Allow group id ${oci_identity_group.nimvault.id} to manage objects in compartment id ${var.compartment_ocid} where any {request.permission='OBJECT_INSPECT', request.permission='OBJECT_READ', request.permission='OBJECT_CREATE', request.permission='OBJECT_OVERWRITE', request.permission='OBJECT_DELETE'}"
+    "Allow group id ${oci_identity_group.nimvault.id} to manage objects in compartment id ${var.compartment_ocid}",
+    "Allow group id ${oci_identity_group.nimvault.id} to manage buckets in compartment id ${var.compartment_ocid}",
   ]
 
   depends_on = [time_sleep.wait_for_iam_group]
