@@ -23,6 +23,10 @@ terraform {
       source  = "hashicorp/tls"
       version = ">= 4.0"
     }
+    time = {
+      source  = "hashicorp/time"
+      version = ">= 0.9"
+    }
   }
 }
 
@@ -94,9 +98,7 @@ data "oci_identity_compartment" "target" {
 }
 
 locals {
-  # Root compartment uses "tenancy" syntax, non-root uses "compartment id <ocid>"
   is_root_compartment = var.compartment_ocid == var.tenancy_ocid
-  policy_scope = local.is_root_compartment ? "tenancy" : "compartment id ${var.compartment_ocid}"
 }
 
 # ─── RSA Key Pair ─────────────────────────────────────────────
@@ -155,22 +157,30 @@ resource "oci_identity_user_group_membership" "nimvault" {
   user_id  = oci_identity_user.nimvault.id
 }
 
+# OCI IAM has a propagation delay — the group OCID exists but the
+# policy engine may not recognize it yet. Wait 30s to be safe.
+resource "time_sleep" "wait_for_iam_propagation" {
+  depends_on      = [
+    oci_identity_group.nimvault,
+    oci_identity_user_group_membership.nimvault
+  ]
+  create_duration = "30s"
+}
+
 # ─── IAM Policy (Minimum Privilege) ──────────────────────────
-# Policy is created in the TARGET compartment (not tenancy root).
-# This requires only compartment-level admin, not tenancy admin.
+# Policy is created at tenancy level; scope is limited to target
+# compartment via statements.
 
 resource "oci_identity_policy" "nimvault_storage" {
   compartment_id = var.tenancy_ocid
-  name           = "nimvault-object-storage-policy"
-  description    = "Nimvault Object Storage access"
-
+  name        = "nimvault-object-storage-policy"
+  description = "Nimvault Object Storage access"
   statements = [
     "Allow group id ${oci_identity_group.nimvault.id} to manage objects in compartment id ${var.compartment_ocid}",
     "Allow group id ${oci_identity_group.nimvault.id} to read buckets in compartment id ${var.compartment_ocid}",
-    "Allow group id ${oci_identity_group.nimvault.id} to manage preauthenticated-requests in compartment id ${var.compartment_ocid}",
+    "Allow group id ${oci_identity_group.nimvault.id} to manage preauthenticated-requests in compartment id ${var.compartment_ocid}"
   ]
-
-  depends_on = [oci_identity_user_group_membership.nimvault]
+  depends_on = [time_sleep.wait_for_iam_propagation]
 
   freeform_tags = {
     "managed-by" = "nimvault-terraform-stack"
