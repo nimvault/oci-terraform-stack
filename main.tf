@@ -157,30 +157,27 @@ resource "oci_identity_user_group_membership" "nimvault" {
   user_id  = oci_identity_user.nimvault.id
 }
 
-# OCI IAM has a propagation delay — the group OCID exists but the
-# policy engine may not recognize it yet. Wait 30s to be safe.
-resource "time_sleep" "wait_for_iam_propagation" {
-  depends_on      = [
-    oci_identity_group.nimvault,
-    oci_identity_user_group_membership.nimvault
-  ]
+# OCI IAM has a propagation delay after group creation.
+resource "time_sleep" "wait_for_iam_group" {
+  depends_on      = [oci_identity_group.nimvault]
   create_duration = "30s"
 }
 
 # ─── IAM Policy (Minimum Privilege) ──────────────────────────
-# Policy is created at tenancy level; scope is limited to target
-# compartment via statements.
+# Policy attached at tenancy; scope limited to target compartment.
+# PAR permissions are part of 'manage buckets' (not a separate resource-type).
 
 resource "oci_identity_policy" "nimvault_storage" {
   compartment_id = var.tenancy_ocid
-  name        = "nimvault-object-storage-policy"
-  description = "Nimvault Object Storage access"
+  name           = "nimvault-object-storage-policy"
+  description    = "Nimvault Object Storage access"
+
   statements = [
-    "Allow group id ${oci_identity_group.nimvault.id} to manage objects in compartment id ${var.compartment_ocid}",
-    "Allow group id ${oci_identity_group.nimvault.id} to read buckets in compartment id ${var.compartment_ocid}",
-    "Allow group id ${oci_identity_group.nimvault.id} to manage preauthenticated-requests in compartment id ${var.compartment_ocid}"
+    "Allow group id ${oci_identity_group.nimvault.id} to manage buckets in compartment id ${var.compartment_ocid} where any {request.permission='BUCKET_READ', request.permission='BUCKET_INSPECT', request.permission='PAR_MANAGE'}",
+    "Allow group id ${oci_identity_group.nimvault.id} to manage objects in compartment id ${var.compartment_ocid} where any {request.permission='OBJECT_INSPECT', request.permission='OBJECT_READ', request.permission='OBJECT_CREATE', request.permission='OBJECT_OVERWRITE', request.permission='OBJECT_DELETE'}"
   ]
-  depends_on = [time_sleep.wait_for_iam_propagation]
+
+  depends_on = [time_sleep.wait_for_iam_group]
 
   freeform_tags = {
     "managed-by" = "nimvault-terraform-stack"
