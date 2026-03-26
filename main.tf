@@ -249,8 +249,7 @@ output "nimvault_region" {
 
 output "nimvault_private_key_pem" {
   value       = tls_private_key.nimvault.private_key_pem
-  sensitive   = true
-  description = "⚠️ Private key (shown ONCE) — needed only if using manual setup or JSON import"
+  description = "Private key - copy this into WordPress Nimvault Settings"
 }
 
 output "nimvault_compartment" {
