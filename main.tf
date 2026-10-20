@@ -2,8 +2,12 @@
 # Nimvault — OCI Service Account Setup
 #
 # This stack automatically creates everything Nimvault needs to connect
-# to your OCI Object Storage. You don't need to know what OCIDs or PEM
-# keys are — just select your Compartment and click Apply.
+# to your OCI Object Storage. Select your Compartment, paste the public key
+# that Nimvault shows you, and click Apply.
+#
+# v2 (TF-STACK-PRIVATE-KEY-PLAINTEXT-01): the private key is created by your
+# WordPress site and never leaves it. This stack only receives the PUBLIC key,
+# so no private key appears in the outputs or in the Terraform state.
 #
 # After Apply completes:
 #   1. Go to the "Outputs" tab below
@@ -18,10 +22,6 @@ terraform {
     oci = {
       source  = "oracle/oci"
       version = ">= 5.0"
-    }
-    tls = {
-      source  = "hashicorp/tls"
-      version = ">= 4.0"
     }
     time = {
       source  = "hashicorp/time"
@@ -69,22 +69,9 @@ variable "service_user_email" {
   default     = "nimvault-service@nimvault.cloud"
 }
 
-variable "create_vault_secret" {
-  description = "Store PEM key in OCI Vault (requires existing Vault)"
-  type        = bool
-  default     = false
-}
-
-variable "vault_id" {
-  description = "OCI Vault OCID (required if create_vault_secret = true)"
+variable "nimvault_public_key_pem" {
+  description = "The public key shown in Nimvault Settings (PEM, starts with -----BEGIN PUBLIC KEY-----)"
   type        = string
-  default     = ""
-}
-
-variable "vault_key_id" {
-  description = "OCI Vault Master Encryption Key OCID (required if create_vault_secret = true)"
-  type        = string
-  default     = ""
 }
 
 # ─── Data Sources ─────────────────────────────────────────────
@@ -99,13 +86,6 @@ data "oci_identity_compartment" "target" {
 
 locals {
   is_root_compartment = var.compartment_ocid == var.tenancy_ocid
-}
-
-# ─── RSA Key Pair ─────────────────────────────────────────────
-
-resource "tls_private_key" "nimvault" {
-  algorithm = "RSA"
-  rsa_bits  = 2048
 }
 
 # ─── IAM User (API Key only, no console login) ───────────────
@@ -137,7 +117,7 @@ resource "oci_identity_user_capabilities_management" "nimvault" {
 
 resource "oci_identity_api_key" "nimvault" {
   user_id   = oci_identity_user.nimvault.id
-  key_value = tls_private_key.nimvault.public_key_pem
+  key_value = trimspace(var.nimvault_public_key_pem)
 }
 
 # ─── IAM Group ────────────────────────────────────────────────
@@ -184,26 +164,6 @@ resource "oci_identity_policy" "nimvault_storage" {
   }
 }
 
-# ─── Optional: Store PEM in OCI Vault ─────────────────────────
-
-resource "oci_vault_secret" "nimvault_pem" {
-  count          = var.create_vault_secret ? 1 : 0
-  compartment_id = var.compartment_ocid
-  vault_id       = var.vault_id
-  key_id         = var.vault_key_id
-  secret_name    = "nimvault-service-pem-key"
-  description    = "Nimvault service account PEM private key"
-
-  secret_content {
-    content_type = "BASE64"
-    content      = base64encode(tls_private_key.nimvault.private_key_pem)
-  }
-
-  freeform_tags = {
-    "managed-by" = "nimvault-terraform-stack"
-  }
-}
-
 # ─── Outputs ──────────────────────────────────────────────────
 #
 # After Apply, go to the "Outputs" tab.
@@ -217,6 +177,7 @@ output "nimvault_setup_instructions" {
   Return to WordPress:
      OPTION A (easiest): Click the "nimvault_callback_url" link below.
      OPTION B: Copy Outputs as JSON > paste in Nimvault Settings.
+     No private key is shown here — your site already holds it.
      OPTION C: Copy values manually into Nimvault Settings fields.
   EOT
   description = "How to finish setup"
@@ -247,11 +208,6 @@ output "nimvault_region" {
   description = "OCI region — where your Object Storage bucket is"
 }
 
-output "nimvault_private_key_pem" {
-  value       = nonsensitive(tls_private_key.nimvault.private_key_pem)
-  description = "Private key - copy this into WordPress Nimvault Settings"
-}
-
 output "nimvault_compartment" {
   value       = var.compartment_ocid
   description = "Compartment OCID"
@@ -260,9 +216,4 @@ output "nimvault_compartment" {
 output "nimvault_compartment_name" {
   value       = local.is_root_compartment ? "tenancy (root)" : coalesce(data.oci_identity_compartment.target.name, var.compartment_ocid)
   description = "Compartment name"
-}
-
-output "nimvault_vault_secret_ocid" {
-  value       = var.create_vault_secret ? oci_vault_secret.nimvault_pem[0].id : "N/A (Vault not used)"
-  description = "Vault Secret OCID (if Vault enabled)"
 }

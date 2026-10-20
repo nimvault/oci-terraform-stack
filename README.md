@@ -19,17 +19,18 @@ management platform for WordPress.
 
 1. In WordPress admin → **Nimvault → Settings → Terraform tab**
 2. Click **"Connect to OCI (Resource Manager)"**
-3. Everything is pre-configured — just select your **Compartment** and click **Apply**
-4. Click the **callback URL** in Outputs to return to WordPress automatically
+3. Nimvault shows a **public key** — copy it. Your site created the key pair and keeps the private key.
+4. In the stack, select your **Compartment**, paste the key into **Nimvault public key**, and click **Apply**
+5. Click the **callback URL** in Outputs to return to WordPress — the connection is complete
 
 ### Option B: Manual deployment
 
 1. Go to [OCI Resource Manager — Create Stack](https://cloud.oracle.com/resourcemanager/stacks/create)
 2. Source: **URL** → paste:
    ```
-   https://github.com/nimvault/oci-terraform-stack/archive/refs/heads/main.zip
+   https://github.com/nimvault/oci-terraform-stack/archive/refs/tags/v2.zip
    ```
-3. Configure variables (Region, Compartment, WordPress URL)
+3. Configure variables (Region, Compartment, Nimvault public key, WordPress URL)
 4. **Create** → **Apply**
 
 ## After deployment
@@ -40,7 +41,9 @@ management platform for WordPress.
 | **JSON Import** (complete) | Copy Outputs as JSON → drag into Nimvault Settings |
 | **Manual** | Copy each Output value into Nimvault Settings fields |
 
-> ⚠️ The **PEM private key** is shown only once in Outputs. Copy it before leaving the page.
+> 🔒 **v2:** this stack never creates or outputs a private key, so the private key is not in the Outputs or in the
+> Terraform state. It is created by your WordPress site and never leaves it. (v1 — the `main` branch — still generates
+> the key inside the stack for older Nimvault versions.)
 
 ## Variables
 
@@ -48,10 +51,10 @@ management platform for WordPress.
 |----------|----------|---------|-------------|
 | `region` | Yes | — | Region where your Object Storage bucket lives |
 | `compartment_ocid` | Yes | — | Compartment containing your bucket |
+| `nimvault_public_key_pem` | Yes | — | Public key shown in Nimvault Settings (not a secret) |
 | `nimvault_site_url` | No | (empty) | Your WordPress URL — enables auto-return link |
 | `service_user_name` | No | `nimvault-service` | IAM user name |
 | `service_user_email` | No | `nimvault-service@nimvault.cloud` | Required by Identity Domains |
-| `create_vault_secret` | No | `false` | Store PEM key in OCI Vault |
 
 ## Requirements
 
