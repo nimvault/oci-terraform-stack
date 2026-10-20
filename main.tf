@@ -184,7 +184,7 @@ output "nimvault_setup_instructions" {
 }
 
 output "nimvault_callback_url" {
-  value       = var.nimvault_site_url != "" ? "${var.nimvault_site_url}/wp-admin/admin.php?page=nimvault-settings&nimvault_tf_callback=1&tf_tenancy=${var.tenancy_ocid}&tf_user=${oci_identity_user.nimvault.id}&tf_fingerprint=${oci_identity_api_key.nimvault.fingerprint}&tf_region=${var.region}" : "⚠️ Enter your WordPress URL in the stack variables to enable this link"
+  value       = var.nimvault_site_url != "" ? "${var.nimvault_site_url}/wp-admin/admin.php?page=nimvault-settings&nimvault_tf_callback=1&tf_tenancy=${var.tenancy_ocid}&tf_user=${oci_identity_user.nimvault.id}&tf_fingerprint=${oci_identity_api_key.nimvault.fingerprint}&tf_region=${var.region}&tf_compartment=${var.compartment_ocid}" : "⚠️ Enter your WordPress URL in the stack variables to enable this link"
   description = "🔗 Click this link to auto-configure WordPress (enter nimvault_site_url above to enable)"
 }
 
