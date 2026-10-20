@@ -93,4 +93,5 @@ outputGroups:
       - nimvault_user_ocid
       - nimvault_fingerprint
       - nimvault_region
+      - nimvault_compartment
       - nimvault_compartment_name
