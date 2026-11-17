@@ -9,26 +9,31 @@ management platform for WordPress.
 | Resource | Name | Purpose |
 |----------|------|---------|
 | **IAM User** | `nimvault-service` | API-only, no console login |
-| **IAM Group** | `NimvaultServiceUsers` | Minimum privilege group |
-| **IAM Policy** | `nimvault-object-storage-policy` | Object Storage manage/read/PAR only |
-| **API Key** | RSA 2048 | Auto-generated key pair for authentication |
+| **IAM Group** | `NimvaultServiceUsers` | Group for the Nimvault user |
+| **IAM Policy** | `nimvault-object-storage-policy` | Manage buckets and objects in the compartment you choose |
+| **API Key** | RSA 2048 | Registers the public key your site created (the stack never holds a private key) |
+
+Creates a new OCI user only for Nimvault. It works only with buckets and objects in the compartment you choose.
+You don't need to enter an admin account key.
 
 ## How to use
 
-### Option A: One-click from Nimvault (recommended)
+### Option A: Start from Nimvault
 
-1. In WordPress admin → **Nimvault → Settings → Terraform tab**
-2. Click **"Connect to OCI (Resource Manager)"**
+1. In WordPress admin → **Nimvault → Settings → Storage**, open the OCI credentials and choose the stack option
+2. Follow the **"Create the stack in OCI"** link
 3. Nimvault shows a **public key** — copy it. Your site created the key pair and keeps the private key.
 4. In the stack, select your **Compartment**, paste the key into **Nimvault public key**, and click **Apply**
-5. Click the **callback URL** in Outputs to return to WordPress — the connection is complete
+5. When the stack finishes, open the stack in the OCI Console, choose **View state › Copy**, and paste it into Nimvault
+
+If the OCI Console opens in another region and shows an error, switch to your home region at the top of the console and continue.
 
 ### Option B: Manual deployment
 
 1. Go to [OCI Resource Manager — Create Stack](https://cloud.oracle.com/resourcemanager/stacks/create)
 2. Source: **URL** → paste:
    ```
-   https://github.com/nimvault/oci-terraform-stack/archive/refs/tags/v2.zip
+   https://github.com/nimvault/oci-terraform-stack/archive/refs/tags/v2.2.zip
    ```
 3. Configure variables (Region, Compartment, Nimvault public key, WordPress URL)
 4. **Create** → **Apply**
@@ -37,13 +42,14 @@ management platform for WordPress.
 
 | Method | How |
 |--------|-----|
-| **Callback URL** (easiest) | Click `nimvault_callback_url` in Outputs → auto-fills WordPress |
-| **JSON Import** (complete) | Copy Outputs as JSON → drag into Nimvault Settings |
+| **Paste the result** | Open the stack in the OCI Console → **View state › Copy** → paste into Nimvault Settings |
 | **Manual** | Copy each Output value into Nimvault Settings fields |
 
 > 🔒 **v2:** this stack never creates or outputs a private key, so the private key is not in the Outputs or in the
-> Terraform state. It is created by your WordPress site and never leaves it. (v1 — the `main` branch — still generates
-> the key inside the stack for older Nimvault versions.)
+> Terraform state. It is created by your WordPress site and never leaves it. (Versions before v2 generated
+> the key inside the stack; they are no longer offered.)
+
+If Apply fails, see the reason in the stack's job log in the OCI Console. To try again, destroy that stack first.
 
 ## Variables
 
